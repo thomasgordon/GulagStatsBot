@@ -1,3 +1,6 @@
+# folders
 node_modules
+
+# files
 .env
-config.json
+.json
