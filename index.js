@@ -80,6 +80,8 @@ async function handleMessageCreate(message) {
 
 // someone did something with a vc
 async function handleVoiceStateUpdate(oldState, newState) {
+  const guild_id = newState.guild?.id || oldState.guild?.id;
+  const user_id = newState.id || oldState.id;
   if (!guild_id || !user_id) {return};
 
   // someone joined vc
@@ -89,7 +91,7 @@ async function handleVoiceStateUpdate(oldState, newState) {
       VALUES (?, ?, ?, ?, ?);
     `;
     const values = [
-      session_id,
+      newState.session_id,
       user_id,
       newState.channel.id,
       guild_id,
