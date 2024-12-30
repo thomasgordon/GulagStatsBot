@@ -91,7 +91,7 @@ async function handleVoiceStateUpdate(oldState, newState) {
       VALUES (?, ?, ?, ?, ?);
     `;
     const values = [
-      newState.session_id,
+      newState.sessionId,
       user_id,
       newState.channel.id,
       guild_id,
