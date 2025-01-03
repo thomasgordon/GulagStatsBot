@@ -3,16 +3,26 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export async function createConnection() {
-  const connection = await mariadb.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-  }).getConnection();
-  console.log("Connected to MariaDB.");
-  return connection;
+// Create a single connection pool
+const pool = mariadb.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
+
+console.log("MariaDB connection pool created.");
+
+export async function getConnection() {
+  try {
+    const connection = await pool.getConnection();
+    console.log("Database connection acquired.");
+    return connection;
+  } catch (error) {
+    console.error("Error acquiring database connection:", error);
+    throw error;
+  }
 }
