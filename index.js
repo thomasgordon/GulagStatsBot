@@ -3,7 +3,7 @@
 import { Client, GatewayIntentBits, Collection, Events } from "discord.js";
 import fs from "fs";
 import { createConnection } from "./utils/database.js";
-import { join, resolve } from "path";
+import { resolve } from "path";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -43,20 +43,14 @@ async function loadCommands() {
   }
 }
 
-let db;
 // bot ready for gaming
 async function handleClientReady() {
-  try {
-    db = await createConnection();
-    console.log(`Logged in as ${globalThis.client.user.tag}. Database connected and ready. It's gaming time`);
-  } catch (error) {
-    console.error("Failed to connect to the database:", error);
-  }
-};
+  console.log(`Logged in as ${globalThis.client.user.tag}. It's gaming time`);
+}
 
 // someone sent a message
 async function handleMessageCreate(message) {
-  if (message.author.bot || !message.guild) {return};
+  if (message.author.bot || !message.guild) return;
 
   const sql = `
     INSERT INTO messages (message_id, channel_id, author_id, content, timestamp, mentions, mention_roles)
@@ -72,19 +66,20 @@ async function handleMessageCreate(message) {
     JSON.stringify([...message.mentions.roles.keys()]),
   ];
   try {
+    const db = await createConnection();
     await db.query(sql, values);
+    await db.end();
   } catch (error) {
     console.error("Failed storing message:", error);
   }
-};
+}
 
 // someone did something with a vc
 async function handleVoiceStateUpdate(oldState, newState) {
   const guild_id = newState.guild?.id || oldState.guild?.id;
   const user_id = newState.id || oldState.id;
-  if (!guild_id || !user_id) {return};
+  if (!guild_id || !user_id) return;
 
-  // someone joined vc
   if (!oldState.channel && newState.channel) {
     const sql = `
       INSERT INTO voice_activity (session_id, user_id, channel_id, guild_id, join_time)
@@ -95,33 +90,33 @@ async function handleVoiceStateUpdate(oldState, newState) {
       user_id,
       newState.channel.id,
       guild_id,
-      new Date()
+      new Date(),
     ];
     try {
+      const db = await createConnection();
       await db.query(sql, values);
+      await db.end();
     } catch (error) {
       console.error("Error logging voice join:", error);
     }
   }
 
-  // someone left vc
   if (oldState.channel && !newState.channel) {
     const sql = `
       UPDATE voice_activity
       SET leave_time = ?
       WHERE user_id = ? AND leave_time IS NULL;
     `;
-    const values = [
-      new Date(),
-      user_id
-    ];
+    const values = [new Date(), user_id];
     try {
+      const db = await createConnection();
       await db.query(sql, values);
+      await db.end();
     } catch (error) {
       console.error("Error logging voice leave:", error);
     }
   }
-};
+}
 
 async function main() {
   await loadCommands();
