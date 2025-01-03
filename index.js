@@ -2,7 +2,7 @@
 
 import { Client, GatewayIntentBits, Collection, Events } from "discord.js";
 import fs from "fs";
-import { createConnection } from "./utils/database.js";
+import { getConnection } from "./utils/database.js";
 import { resolve } from "path";
 import dotenv from "dotenv";
 
@@ -66,7 +66,7 @@ async function handleMessageCreate(message) {
     JSON.stringify([...message.mentions.roles.keys()]),
   ];
   try {
-    const db = await createConnection();
+    const db = await getConnection();
     await db.query(sql, values);
     await db.end();
   } catch (error) {
@@ -93,7 +93,7 @@ async function handleVoiceStateUpdate(oldState, newState) {
       new Date(),
     ];
     try {
-      const db = await createConnection();
+      const db = await getConnection();
       await db.query(sql, values);
       await db.end();
     } catch (error) {
@@ -109,7 +109,7 @@ async function handleVoiceStateUpdate(oldState, newState) {
     `;
     const values = [new Date(), user_id];
     try {
-      const db = await createConnection();
+      const db = await getConnection();
       await db.query(sql, values);
       await db.end();
     } catch (error) {
